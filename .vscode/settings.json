@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "raylib.h": "c",
+        "matrix.h": "c",
+        "raygui_icons.h": "c",
+        "keygen.h": "c",
+        "*.ttf": "c",
+        "raygui.h": "c"
+    }
+}

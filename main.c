@@ -17,8 +17,6 @@
 
 #define MAX_FILE_NAME_LENGTH 256
 
-
-
 // Загрузка текстового файла
 char* LoadTextFile(const char* fileName)
 {
@@ -38,7 +36,7 @@ char* LoadTextFile(const char* fileName)
 }
 
 // Загрузка двоичного файла
-void* LoadBinaryFile(const char* fileName, int* fileSize)
+unsigned char* LoadBinaryFile(const char* fileName, int* fileSize)
 {
     FILE* file = fopen(fileName, "rb");
     if (!file) return NULL;
@@ -47,20 +45,50 @@ void* LoadBinaryFile(const char* fileName, int* fileSize)
     *fileSize = ftell(file);
     rewind(file);
 
-    void* fileContent = malloc(*fileSize);
+    unsigned char* fileContent = malloc(*fileSize);
     fread(fileContent, *fileSize, 1, file);
 
     fclose(file);
     return fileContent;
 }
+
+void FileParsing(GuiWindowFileDialogState * const state, char * const fileName, int * const fileSize, char ** fileContent)
+{
+    strcpy(fileName, TextFormat("%s" PATH_SEPERATOR "%s", state->dirPathText, state->fileNameText));
+    // strncpy(fileNameToLoad, fileDialogState.fileNameText, 512 - 1);
+    // fileNameToLoad[MAX_FILE_NAME_LENGTH - 1] = '\0'; // Ensure null-termination
+    *fileSize = GetFileLength(fileName);
+    state->SelectFilePressed = false;
+    // printf("%s\n", state->filterExt);
+    // printf("%i\n", *fileSize);
+
+    if (strcmp(state->filterExt, ".txt") == 0)
+    {
+        *fileContent = LoadTextFile(fileName);
+    }
+    else if (strcmp(state->filterExt, ".bin") == 0)
+    {
+        *fileContent = (void *)LoadBinaryFile(fileName, fileSize);
+    }
+    else if (strcmp(state->filterExt, ".hex") == 0)
+    {
+        *fileContent = (void *)LoadBinaryFile(fileName, fileSize);
+    }
+
+    // printf("%s\n", *fileContent);
+
+
+}
+
+
 //----------------------------------------------------------------------------------
 // Controls Functions Declaration
 //----------------------------------------------------------------------------------
-static void Button000();
-static void Button001();
-static void Button002();
-static void Button003();
-static void Button004();
+static void Button000(); //Key Gen
+static void Button001(); //Encode
+static void Button002(); //Decode
+static void Button003(); //OK
+static void Button004(); //Cancel
 
 
 //----------------------------------------------------------------------------------
@@ -78,16 +106,29 @@ typedef enum
 static bool winActive = false;
 static win winFlag = start;
 static bool WindowBox000Active = false;
-char textBoxText[4096] = "";
+
+static char textBoxText[4096] = "";
+static int dataSize = 0;
+static int encodedDataSize = 0;
+static int deltaDataSize = 0;
+static int keySize = 0;
+static int privateKeySize = 0;
+static int cycleCount = 0;
+static int timeCount = 0;
+static int memoryCount = 0;
+
+
+static char* dataContent = NULL;
+static char* keyContent = NULL;
 
 static char GroupBox003Text[15] = "Start window";
 const char Button000Text[15] = "Key Gen";
 const char Button001Text[15] = "Encode";
 const char Button002Text[15] = "Decode";
 
+const char *WindowBox000Text = "Text Dialog";
 const char Button003Text[15] = "OK";
 const char Button004Text[15] = "Cancel";
-
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -104,18 +145,26 @@ int main()
 
     const char *ProgressBar004Text = "";
     float ProgressBar004Value = 0.3f;
+
+    const char *IncapProgressText = "";
+    float IncapProgressValue = 10.0f;
+
+    const char *EncodeProgressText = "";
+    float EncodeProgressValue = 20.0f;
+
+    const char *MemoryProgressTextLeft = "Using Memory: 0%";
+    const char *MemoryProgressTextRight = "100%";
+    float MemoryProgressValue = 20.0f;
     
     // Custom file dialog
     //----------------------------------------------------------------------------------
     GuiWindowFileDialogState fileDialogState = InitGuiWindowFileDialog(GetWorkingDirectory());
-    char fileNameToLoad[512] = { 0 };
-    char* textFileContent = NULL;
-    void* binaryFileContent = NULL;
-    int binaryFileSize = 0;
-
+    GuiWindowFileDialogState keyDialogState = InitGuiWindowFileDialog(GetWorkingDirectory());
+    char fileNameToLoad[512] = {0,};
+    char keyNameToLoad[512] = {0,};
+    
     // Custom text dialog
     //----------------------------------------------------------------------------------
-    const char *WindowBox000Text = "Text Dialog";
     bool TextBox001EditMode = false;
     Rectangle textBoxRect = { 384, 208, 264, 176 };
 
@@ -123,6 +172,8 @@ int main()
     Vector2 mouseOffset = { 0, 0 };
     bool isDragging = false;
 
+
+    bool openKeyStatus = false;
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
 
@@ -135,26 +186,34 @@ int main()
         //----------------------------------------------------------------------------------
         
         if (fileDialogState.SelectFilePressed)
-        {
-            // printf("6\n");
-            
+        {            
             if (IsFileExtension(fileDialogState.fileNameText, ".txt"))
             {
-                strcpy(fileNameToLoad, TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-                // strncpy(fileNameToLoad, fileDialogState.fileNameText, 512 - 1);
-                // fileNameToLoad[MAX_FILE_NAME_LENGTH - 1] = '\0'; // Ensure null-termination
-                binaryFileSize = GetFileLength(fileNameToLoad);
-                fileDialogState.SelectFilePressed = false;
+                strcpy(fileDialogState.filterExt, ".txt");
+                FileParsing(&fileDialogState, fileNameToLoad, &dataSize, &dataContent);
+                // printf("%s\n", dataContent);
             }
-            else if (IsFileExtension(fileDialogState.fileNameText, ".bin"))
+            if (IsFileExtension(fileDialogState.fileNameText, ".bin"))
             {
-                strcpy(fileNameToLoad, TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-                // strncpy(fileNameToLoad, fileDialogState.fileNameText, 512 - 1);
-                // fileNameToLoad[MAX_FILE_NAME_LENGTH - 1] = '\0'; // Ensure null-termination
-                binaryFileSize = GetFileLength(fileNameToLoad);
-                fileDialogState.SelectFilePressed = false;
+                strcpy(fileDialogState.filterExt, ".bin");
+                FileParsing(&fileDialogState, fileNameToLoad, &dataSize, &dataContent);
+                // printf("%s\n", dataContent);
             }
-            else printf("8\n");
+            if (IsFileExtension(fileDialogState.fileNameText, ".hex"))
+            {
+                strcpy(fileDialogState.filterExt, ".hex");
+                FileParsing(&fileDialogState, fileNameToLoad, &dataSize, &dataContent);
+                // printf("%s\n", dataContent);
+            }
+        }
+        if (keyDialogState.SelectFilePressed)
+        {
+            if (IsFileExtension(keyDialogState.fileNameText, ".txt"))
+            {
+                strcpy(keyDialogState.filterExt, ".bin");
+                FileParsing(&keyDialogState, keyNameToLoad, &keySize, &keyContent);
+            }
+
         }
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
         {
@@ -199,31 +258,96 @@ int main()
             if (winFlag == key && winActive)
             {
                 // GuiGroupBox((Rectangle){ 48, 110, 912, 539}, GroupBox003Text);
-                // DrawTextEx(font1, "hello", (Vector2){ 100, 150 }, 32.0, 2.0, VIOLET); 
                 GuiProgressBar((Rectangle){ 96, 336, 504, 24 }, ProgressBar004Text, NULL, &ProgressBar004Value, 0, 1);
             }
             if (winFlag == enc && winActive)
             {
                 // GuiGroupBox((Rectangle){ 48, 110, 912, 539 }, GroupBox003Text);
-                GuiProgressBar((Rectangle){ 96, 336, 450, 24 }, ProgressBar004Text, NULL, &ProgressBar004Value, 0, 1);
+                // GuiProgressBar((Rectangle){ 96, 336, 450, 24 }, ProgressBar004Text, NULL, &ProgressBar004Value, 0, 1);
+                
+                // Incapsulation
+                //--------------------------------------------------------------------------------
+                GuiLine((Rectangle){68, 130, 872, 24}, "Incapsulation");
+                
+                if (GuiButton((Rectangle){68, 160, 200, 24}, GuiIconText(ICON_FILE_OPEN, "Load Key"))) keyDialogState.windowActive = true;
 
-                if (GuiButton((Rectangle){68, 130, 200, 50}, GuiIconText(ICON_FILE_OPEN, "Open File")))
+                DrawText(TextFormat("Key File: %s\n", keyDialogState.fileNameText), 280, 160+2, 20, LIGHTGRAY);
+                if (keySize % 1024 >= 1024) DrawText(TextFormat("Key Size: %4.4f MB", (double)((double)keySize / 1024 / 1024)), 550, 160+2, 20, LIGHTGRAY);
+                else if (keySize % 1024 >= 100) DrawText(TextFormat("Key Size: %4.4f KB", (double)((double)keySize / 1024)), 550, 160+2, 20, LIGHTGRAY);
+                else DrawText(TextFormat("Key Size: %i bytes", keySize), 550, 160+2, 20, LIGHTGRAY);
+
+                if (GuiButton((Rectangle){820, 160, 120, 24}, GuiIconText(ICON_FILE_DELETE, "Delete Key")))
                 {
-                    fileDialogState.windowActive = true;
+                    if (strcmp(keyDialogState.fileNameText, "") != 0)
+                    {
+                        keyDialogState = InitGuiWindowFileDialog(GetWorkingDirectory());
+                        strncpy_s(keyNameToLoad, 512, "", 512);
+                        keySize = 0;
+                        if (keyContent != NULL) free(keyContent);
+                        keyContent = NULL;
+                    }
+                }
+                if (GuiButton((Rectangle){68, 190, 200, 24}, GuiIconText(ICON_KEY, "Incapsulation")))
+                {
+                    // TODO: запуск функции инкапсуляции, получения и сохранения файла закрытого ключа, его размера. Можно сделать как загрузку файла тип чтобы ввели название для нового файла.
+                }
+                GuiProgressBar((Rectangle){ 600, 190, 340, 24 }, IncapProgressText, NULL, &IncapProgressValue, 0, 100);
+                if (privateKeySize % 1024 >= 1024) DrawText(TextFormat("Private Key Size: %4.4f MB", (double)((double)privateKeySize / 1024 / 1024)), 280, 190+2, 20, LIGHTGRAY);
+                else if (privateKeySize % 1024 >= 100) DrawText(TextFormat("Private Key Size: %4.4f KB", (double)((double)privateKeySize / 1024)), 280, 190+2, 20, LIGHTGRAY);
+                else DrawText(TextFormat("Private Key Size: %i bytes", privateKeySize), 280, 190+2, 20, LIGHTGRAY);
+
+
+                // File Work
+                //--------------------------------------------------------------------------------
+                GuiLine((Rectangle){68, 220, 872, 24}, "Chose File");
+                if (GuiButton((Rectangle){68, 250, 200, 24}, GuiIconText(ICON_FILE_OPEN, "Open File"))) fileDialogState.windowActive = true;
+                if (GuiButton((Rectangle){68, 280, 200, 24}, GuiIconText(ICON_TEXT_NOTES, "Enter Text"))) WindowBox000Active = true;
+
+                if (strcmp(fileDialogState.fileNameText, "") != 0) DrawText(TextFormat("Data Content: %s\n", fileDialogState.fileNameText), 280, 250+2, 20, LIGHTGRAY);
+                else if (strcmp(textBoxText, "") != 0) DrawText("Data Content: text", 280, 250+2, 20, LIGHTGRAY);
+                else DrawText("Data Content: null", 280, 250+2, 20, LIGHTGRAY);
+
+                if (dataSize % 1024 >= 1024) DrawText(TextFormat("Original Data Size: %4.4f MB", (double)((double)dataSize / 1024 / 1024)), 280, 280+2, 20, LIGHTGRAY);
+                else if (dataSize % 1024 >= 100) DrawText(TextFormat("Original Data Size: %4.4f KB", (double)((double)dataSize / 1024)), 280, 280+2, 20, LIGHTGRAY);
+                else DrawText(TextFormat("Original Data Size: %i bytes", dataSize), 280, 280+2, 20, LIGHTGRAY);
+
+                if (GuiButton((Rectangle){740, 250, 200, 54}, GuiIconText(ICON_FILE_DELETE, "Delete File")))
+                {
+                    if (strcmp(fileDialogState.fileNameText, "") != 0)
+                    {
+                        fileDialogState = InitGuiWindowFileDialog(GetWorkingDirectory());
+                        strncpy_s(fileNameToLoad, 512, "", 512);
+                        dataSize = 0;
+                        if (dataContent != NULL) free(dataContent);
+                        dataContent = NULL;
+                    }
+                    else if(strcmp(textBoxText, "") != 0)
+                    {
+                        strncpy_s(textBoxText, 4096, "", 4096);
+                        dataSize = 0;
+                    }
                 }
 
-                if (GuiButton((Rectangle){68, 190, 200, 50}, GuiIconText(ICON_TEXT_NOTES, "Enter Text")))
+                // Encoding Data
+                //--------------------------------------------------------------------------------
+                GuiLine((Rectangle){68, 310, 872, 24}, "Encoding Data");
+                if (GuiButton((Rectangle){68, 340, 872, 50}, GuiIconText(ICON_SHIELD, "Encode Data")))
                 {
-                    WindowBox000Active = true;
+                    // TODO: запуск функции шифрования ранее выбранного файла. Используется закрытый ключ, полученный ранее. Результат шифрования сохраняется в txt файл.
                 }
-
-                DrawText("Data Content:", 100, 400, 20, LIGHTGRAY);
-                if (textFileContent)
-                {
-                    DrawText(textFileContent, 100, 420, 20, LIGHTGRAY);
-                }
-
-                DrawText(TextFormat("Data Size: %i bytes", binaryFileSize), 100, 440, 20, LIGHTGRAY);
+                GuiProgressBar((Rectangle){ 68, 400, 872, 24 }, EncodeProgressText, NULL, &EncodeProgressValue, 0, 100);
+                // Encode Methrics
+                //--------------------------------------------------------------------------------
+                GuiLine((Rectangle){68, 430, 872, 24}, "Encode Methrics");
+                DrawText(TextFormat("Time: %i ms", timeCount), 68, 460+2, 20, LIGHTGRAY);
+                DrawText(TextFormat("Cycles: %i", cycleCount), 300, 460+2, 20, LIGHTGRAY);
+                GuiProgressBar((Rectangle){ 179, 500, 731, 24 }, MemoryProgressTextLeft, MemoryProgressTextRight, &MemoryProgressValue, 0, 100);
+                DrawText(TextFormat("Using Memory: %i bytes", memoryCount), 68, 535, 20, LIGHTGRAY);
+                // Encode Results
+                //--------------------------------------------------------------------------------
+                GuiLine((Rectangle){68, 555, 872, 24}, "Results");
+                DrawText(TextFormat("Encoded Data Size: %i bytes", encodedDataSize), 68, 585, 20, LIGHTGRAY);
+                DrawText(TextFormat("Delta Data Size: %i bytes", deltaDataSize), 68, 610, 20, LIGHTGRAY);
 
                 // GUI: Dialog Window
                 //--------------------------------------------------------------------------------
@@ -241,8 +365,10 @@ int main()
                 // GUI: Dialog Window
                 //--------------------------------------------------------------------------------
                 if (fileDialogState.windowActive) GuiLock();
+                if (keyDialogState.windowActive) GuiLock();
                 GuiUnlock();
                 GuiWindowFileDialog(&fileDialogState);
+                GuiWindowFileDialog(&keyDialogState);
             }
             if (winFlag == dec && winActive)
             {
@@ -265,8 +391,7 @@ int main()
     //--------------------------------------------------------------------------------------
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
-    if (textFileContent) free(textFileContent);
-    if (binaryFileContent) free(binaryFileContent);
+    if (dataContent) free(dataContent);
     return 0;
 }
 
@@ -309,11 +434,11 @@ static void Button002()
 static void Button003()
 {
     WindowBox000Active = false;
-    printf("%s\n", textBoxText);
-    strncpy_s(textBoxText, 4096, "", 4096);
+    dataSize = strlen(textBoxText);
 }
 static void Button004()
 {
     WindowBox000Active = false;
+    dataSize = 0;
     strncpy_s(textBoxText, 4096, "", 4096);
 }

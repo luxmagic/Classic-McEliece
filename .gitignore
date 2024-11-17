@@ -27,6 +27,7 @@ _deps
 *.vb
 *.wsf
 *.bin
+*.hex
 *.ttf
 *.a
 *.lib

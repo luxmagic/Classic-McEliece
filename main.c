@@ -117,6 +117,7 @@ static int cycleCount = 0;
 static int timeCount = 0;
 static int memoryCount = 0;
 
+static char *configFile = NULL;
 
 static char* dataContent = NULL;
 static char* keyContent = NULL;
@@ -130,6 +131,9 @@ const char *WindowBox000Text = "Text Dialog";
 const char Button003Text[15] = "OK";
 const char Button004Text[15] = "Cancel";
 
+static int securityLevel = 0;
+static bool securityLevelList = false;
+
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
@@ -140,6 +144,9 @@ int main()
     //---------------------------------------------------------------------------------------
     InitWindow(WITDH, HEIGHT, "Classic McEliece");
     GuiLoadStyleDark();
+    // Image logo = LoadImageSvg("raygui/logo/bug.svg", 32, 32);
+    // SetWindowIcon(logo);
+    
     // Classic McEliece: controls initialization
     //---------------------------------------------------------------------------------
 
@@ -257,8 +264,48 @@ int main()
             
             if (winFlag == key && winActive)
             {
-                // GuiGroupBox((Rectangle){ 48, 110, 912, 539}, GroupBox003Text);
-                GuiProgressBar((Rectangle){ 96, 336, 504, 24 }, ProgressBar004Text, NULL, &ProgressBar004Value, 0, 1);
+                // Security Settings
+                //----------------------------------------------------------------------------------
+                GuiLine((Rectangle){68, 130, 872, 24}, "Settings Security");
+                if (GuiButton((Rectangle){68, 160, 872, 24}, GuiIconText(ICON_PLAYER, "Create User Name"))) {}
+                if (GuiButton((Rectangle){280, 190, 260, 24}, GuiIconText(ICON_FILE_ADD, "Load Config"))) {}
+                DrawText(TextFormat("File: %s\n", configFile), 280, 220+1, 20, LIGHTGRAY);
+                
+                if (GuiButton((Rectangle){550, 190, 200, 24}, GuiIconText(ICON_FILE_SAVE, "Save Level"))) {}
+                if (GuiButton((Rectangle){550, 220, 200, 24}, GuiIconText(ICON_GEAR, "Configure"))) {}
+                DrawText(TextFormat("Vector of length k: %i\n", securityLevel), 770, 190+1, 10, LIGHTGRAY);
+                DrawText(TextFormat("Length of the code n: %i\n", securityLevel), 770, 210+1, 10, LIGHTGRAY);
+                DrawText(TextFormat("Code distance d: %i\n", securityLevel), 770, 230+1, 10, LIGHTGRAY);
+
+                // Generate Open Key
+                //----------------------------------------------------------------------------------
+                GuiLine((Rectangle){68, 250, 872, 24}, "Generate Open Key");
+                GuiSetState(STATE_FOCUSED);
+                if (GuiButton((Rectangle){68, 280, 872, 54}, GuiIconText(ICON_KEY, "Generate Key")))
+                {
+                    // TODO: запуск функции 
+                }
+                GuiSetState(STATE_NORMAL);
+                GuiProgressBar((Rectangle){ 68, 350, 872, 24 }, EncodeProgressText, NULL, &EncodeProgressValue, 0, 100);
+                
+                // KeyGen Methrics
+                //----------------------------------------------------------------------------------
+                GuiLine((Rectangle){68, 380, 872, 24}, "KeyGen Methrics");
+                DrawText(TextFormat("Time: %i ms", timeCount), 68, 410+2, 20, LIGHTGRAY);
+                DrawText(TextFormat("Cycles: %i", cycleCount), 400, 410+2, 20, LIGHTGRAY);
+                GuiProgressBar((Rectangle){ 179, 440, 731, 24 }, MemoryProgressTextLeft, MemoryProgressTextRight, &MemoryProgressValue, 0, 100);
+                DrawText(TextFormat("Using Memory: %i bytes", memoryCount), 68, 480, 20, LIGHTGRAY);
+                
+                // Save Results
+                //----------------------------------------------------------------------------------
+                GuiLine((Rectangle){68, 510, 872, 24}, "Save Results");
+                if (GuiButton((Rectangle){68, 540, 420, 54}, GuiIconText(ICON_FILE_SAVE_CLASSIC, "Save Open Key"))) {}
+                if (GuiButton((Rectangle){520, 540, 420, 54}, GuiIconText(ICON_FILE_EXPORT, "Save Data for Key"))) {}
+                
+                // Dropdown List
+                //----------------------------------------------------------------------------------
+                if(GuiDropdownBox((Rectangle){68, 190, 200, 54}, "#202#Security Level;Low;Medium;High", &securityLevel, securityLevelList)) securityLevelList = !securityLevelList;
+                
             }
             if (winFlag == enc && winActive)
             {
@@ -299,7 +346,7 @@ int main()
 
                 // File Work
                 //--------------------------------------------------------------------------------
-                GuiLine((Rectangle){68, 220, 872, 24}, "Chose File");
+                GuiLine((Rectangle){68, 220, 872, 24}, "Choice File");
                 if (GuiButton((Rectangle){68, 250, 200, 24}, GuiIconText(ICON_FILE_OPEN, "Open File"))) fileDialogState.windowActive = true;
                 if (GuiButton((Rectangle){68, 280, 200, 24}, GuiIconText(ICON_TEXT_NOTES, "Enter Text"))) WindowBox000Active = true;
 
@@ -331,10 +378,12 @@ int main()
                 // Encoding Data
                 //--------------------------------------------------------------------------------
                 GuiLine((Rectangle){68, 310, 872, 24}, "Encoding Data");
+                GuiSetState(STATE_FOCUSED);
                 if (GuiButton((Rectangle){68, 340, 872, 50}, GuiIconText(ICON_SHIELD, "Encode Data")))
                 {
                     // TODO: запуск функции шифрования ранее выбранного файла. Используется закрытый ключ, полученный ранее. Результат шифрования сохраняется в txt файл.
                 }
+                GuiSetState(STATE_NORMAL);
                 GuiProgressBar((Rectangle){ 68, 400, 872, 24 }, EncodeProgressText, NULL, &EncodeProgressValue, 0, 100);
                 // Encode Methrics
                 //--------------------------------------------------------------------------------

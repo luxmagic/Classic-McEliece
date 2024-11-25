@@ -72,7 +72,7 @@ void read_matrix(M *a)
 	}
 }
 
-int print_matrix(M *a)
+int print_matrix(M *a, char *name)
 {
 	if(a == NULL) {
 		return MATRIX_NOT_EXISTS;
@@ -80,10 +80,12 @@ int print_matrix(M *a)
 
 	int lines    = a->lines;
 	int columns = a->columns;
+
+	printf("---->%s<-----------------------------------------------------\n", name);
 	
 	for(int i = 0; i < lines; i++) {
 		for(int j = 0; j < columns; j++) {
-			printf("%lf ", a->value[i][j]);
+			printf("%i ", a->value[i][j]);
 		}
 		printf("\n");
 	}

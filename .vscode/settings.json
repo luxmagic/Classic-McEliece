@@ -5,6 +5,13 @@
         "raygui_icons.h": "c",
         "keygen.h": "c",
         "*.ttf": "c",
-        "raygui.h": "c"
+        "raygui.h": "c",
+        "malloc.h": "c",
+        "cstddef": "c",
+        "limits": "c",
+        "wbemidl.h": "c",
+        "*.m": "c",
+        "config_files.h": "c",
+        "stdbool.h": "c"
     }
 }

@@ -2,6 +2,7 @@
 #define MATRICI_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * @M 
@@ -17,13 +18,13 @@
  *      of the current matrix.
  */
 typedef struct M {
-	int lines;
-	int columns;
+	uint16_t lines;
+	uint16_t columns;
 
-	double determinant;
-	double trace;
+	uint16_t determinant;
+	uint8_t trace;
 			
-	double **value;
+	uint8_t **value;
 	struct M *inverse;
 } M;
 
@@ -56,7 +57,7 @@ void read_matrix(M *a);
  * @return int If the matrix doesn't exists it will return MATRIX_NOT_EXISTS
  *         and NO_ERROR if the matrix was successfully printed.
  */
-int print_matrix(M *a);
+int print_matrix(M *a, char *name);
 
 /**
  * @brief Returns the minorant of a matrix by a specific row and column.
@@ -126,9 +127,9 @@ int compute_inverse(M *a);
  *
  * @param a The matrix whose determinant will be computed.
  *
- * @return double The determinant of matrix `a`.
+ * @return int The determinant of matrix `a`.
  */
-double get_determinant(M *a);
+int get_determinant(M *a);
 
 /**
  * @brief Multiplies the matrices `a` and `b` and stores their results in the
@@ -196,5 +197,25 @@ M *matrix_pow(M *a, int power);
  *
  */
 bool compare_matrices(M *a, M *b);
+
+/**
+ * @brief Use this function to get the size of a matrix
+ *
+ * @param a An instance of struct matrix.
+ *
+ * @return int The size of the matrix
+ *
+ */
+int get_matrix_size(M *a);
+
+/**
+ * @brief Use this function to get the rank of a matrix
+ *
+ * @param a An instance of struct matrix.
+ *
+ * @return uint16 The rank of the matrix
+ *
+ */
+uint16_t compute_rank(M *a);
 
 #endif 

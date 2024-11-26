@@ -12,6 +12,8 @@
         "wbemidl.h": "c",
         "*.m": "c",
         "config_files.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "stdio.h": "c",
+        "utility.h": "c"
     }
 }

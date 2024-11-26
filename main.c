@@ -13,6 +13,7 @@
 #undef RAYGUI_IMPLEMENTATION            // Avoid including raygui implementation again
 #define GUI_WINDOW_FILE_DIALOG_IMPLEMENTATION
 #include "choice_file.h"
+#include "file_handle.h"
 
 #include "raygui/styles/dark/style_dark.h"
 
@@ -21,61 +22,6 @@
 
 #define MAX_FILE_NAME_LENGTH 256
 
-// Загрузка текстового файла
-char* LoadTextFile(const char* fileName)
-{
-    FILE* file = fopen(fileName, "r");
-    if (!file) return NULL;
-
-    fseek(file, 0, SEEK_END);
-    int fileSize = ftell(file);
-    rewind(file);
-
-    char* fileContent = (char*)malloc(fileSize + 1);
-    fread(fileContent, fileSize, 1, file);
-    fileContent[fileSize] = '\0';
-
-    fclose(file);
-    return fileContent;
-}
-
-// Загрузка двоичного файла
-unsigned char* LoadBinaryFile(const char* fileName, int* fileSize)
-{
-    FILE* file = fopen(fileName, "rb");
-    if (!file) return NULL;
-
-    fseek(file, 0, SEEK_END);
-    *fileSize = ftell(file);
-    rewind(file);
-
-    unsigned char* fileContent = malloc(*fileSize);
-    fread(fileContent, *fileSize, 1, file);
-
-    fclose(file);
-    return fileContent;
-}
-
-void FileParsing(GuiWindowFileDialogState * const state, char * const fileName, int * const fileSize, char ** fileContent)
-{
-    strcpy(fileName, TextFormat("%s" PATH_SEPERATOR "%s", state->dirPathText, state->fileNameText));
-    // strncpy(fileNameToLoad, fileDialogState.fileNameText, 512 - 1);
-    // fileNameToLoad[MAX_FILE_NAME_LENGTH - 1] = '\0'; // Ensure null-termination
-    *fileSize = GetFileLength(fileName);
-    state->SelectFilePressed = false;
-    if (strcmp(state->filterExt, ".txt") == 0)
-    {
-        *fileContent = LoadTextFile(fileName);
-    }
-    else if (strcmp(state->filterExt, ".bin") == 0)
-    {
-        *fileContent = (void *)LoadBinaryFile(fileName, fileSize);
-    }
-    else if (strcmp(state->filterExt, ".hex") == 0)
-    {
-        *fileContent = (void *)LoadBinaryFile(fileName, fileSize);
-    }
-}
 
 
 //----------------------------------------------------------------------------------
@@ -116,7 +62,7 @@ static parameters config;
 static parameters *cnf = &config;
 static config_file cf;
 static config_file *cf_ptr = &cf;
-cf_threads *cf_threads_ptr;
+static cf_threads *cf_threads_ptr;
 
 static bool WindowUserNameBox = false;
 static char userName[512] = "";
@@ -318,10 +264,10 @@ int main()
             // Reset the flag to indicate that the window is no longer being dragged
             isDragging = false;
         }
-        
+
         if (startThreadKeyGen)
         {
-            printf("1\n");
+            // printf("1\n");
             cf_threads_ptr = malloc(sizeof(cf_threads));
             SetCFThread();
             pthread_create(&threadKeyGen, NULL, GeneratePublicKey, (void *)cf_threads_ptr);
@@ -377,7 +323,10 @@ int main()
                 else GuiSetState(STATE_FOCUSED);
                 if (GuiButton((Rectangle){68, 280, 872, 54}, GuiIconText(ICON_KEY, "Generate Key")))
                 {
+                    
+
                     startThreadKeyGen = true;
+                    // endThreadKeyGen = true;
                     deltaTime = 1.0f;//(float)(trunc(keygen_time*1000)) / 100.0f;
                     // printf("%f\n", deltaTime);
                 }
@@ -385,12 +334,12 @@ int main()
                 if (endThreadKeyGen)
                 {
                     pthread_mutex_lock(&cf_threads_ptr->mutex);
-                    if(!cf_threads_ptr->is_done)
+                    while (!cf_threads_ptr->is_done)
                     {
                         pthread_cond_wait(&cf_threads_ptr->cond, &cf_threads_ptr->mutex);
                     }
-                    //if (cf_threads_ptr->is_done)
-                    else
+
+                    if (cf_threads_ptr->is_done)
                     {
                         // printf("good\n");
                         endThreadKeyGen = false;
@@ -399,7 +348,6 @@ int main()
                     pthread_mutex_unlock(&cf_threads_ptr->mutex);
                 }
 
-                
                 if ((KeyGenProgressValue < 100.0f) && startTime) KeyGenProgressValue += deltaTime;
                 else if (startTime)
                 {
@@ -408,7 +356,7 @@ int main()
                     memoryCount = cf_threads_ptr->KeyGenMethics.keygen_using_memory;
                     publicKeySize = cf_threads_ptr->KeyGenMethics.key_size;
                     
-                    startTime != startTime;
+                    startTime = !startTime;
                     deltaTime = 0.0f;
                 }
                 

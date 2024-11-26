@@ -2,12 +2,8 @@
 #define KEYGEN_H_
 #include <stdbool.h>
 #include <matrix.h>
+#include <utility.h>
 #include <config_files.h>
-
-extern volatile double keygen_time;
-extern volatile double keygen_cycle;
-extern volatile int keygen_using_memory;
-extern volatile int key_size;
 
 typedef struct 
 {

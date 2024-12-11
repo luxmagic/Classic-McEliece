@@ -5,9 +5,9 @@
 #define ENCRYPTION_KEY 5.89804 
 
 const parameters zero = {.k = 0, .n = 0, .t = 0};
-const parameters low = {.k = 524, .n = 1024, .t = 50};
-const parameters middle = {.k = 1751, .n = 2048, .t = 27};
-const parameters hight = {.k = 5413, .n = 6960, .t = 119};
+const parameters low = {.k = 2720, .n = 3488, .t = 64, .m = 12};
+const parameters middle = {.k = 3360, .n = 4608, .t = 96, .m = 13};
+const parameters hight = {.k = 5024, .n = 6688, .t = 128, .m = 13};
 
 static config_file config;
 static config_file *cf_ptr = &config;
@@ -27,15 +27,15 @@ parameters ReadConfigFile(int level, config_file cf)
     switch (level)
     {
     case 1:
-        printf("%i\t %i\t %i\n", cf.low.n, cf.low.k, cf.low.t);
+        printf("%i\t %i\t %i\t %i\n", cf.low.n, cf.low.k, cf.low.t, cf.low.m);
         return cf.low;
         break;
     case 2:
-        printf("%i\t %i\t %i\n", cf.middle.n, cf.middle.k, cf.middle.t);
+        printf("%i\t %i\t %i\t %i\n", cf.middle.n, cf.middle.k, cf.middle.t, cf.middle.m);
         return cf.middle;
         break;
     case 3:
-        printf("%i\t %i\t %i\n", cf.hight.n, cf.hight.k, cf.hight.t);
+        printf("%i\t %i\t %i\t %i\n", cf.hight.n, cf.hight.k, cf.hight.t, cf.hight.m);
         return cf.hight;
         break;
     default:
@@ -55,7 +55,7 @@ void WriteConfigFile(config_file cf, char* userName)
 
 void WriteBinaryFile(char* filename, config_file cf) 
 { 
-    FILE* file = fopen(filename, "wb");
+    FILE* file = fopen(filename, "w+b");
     if (file == NULL) 
     { 
         printf("Failed to open file for writing\n"); 

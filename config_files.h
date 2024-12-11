@@ -3,11 +3,12 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-typedef struct
+typedef struct cf
 {
     int n;
     int k;
     int t;
+    int m;
 } parameters;
 
 typedef struct
@@ -17,22 +18,16 @@ typedef struct
     parameters hight;
 } config_file;
 
-typedef struct
-{
-    double keygen_time;
-    double keygen_cycle;
-    int keygen_using_memory;
-    int key_size;
-} methrics;
 
 typedef struct
 {
-    parameters *cf;
-    methrics KeyGenMethics;
-    bool is_done;
-    pthread_mutex_t mutex;
-    pthread_cond_t cond;
-} cf_threads;
+    double time;
+    double cycle;
+    int using_memory;
+    int one_obj_size;
+    int two_obj_size;
+} methrics;
+
 
 config_file GetDefaultConfigFile(void);
 parameters ReadConfigFile(int level, config_file cf);

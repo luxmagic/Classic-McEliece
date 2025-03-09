@@ -414,7 +414,7 @@ static void ReloadDirectoryFiles(GuiWindowFileDialogState *state)
             {
                 strcpy(dirFilesIcon[i], TextFormat("#10#%s", GetFileName(state->dirFiles.paths[i])));
             }
-            else if (IsFileExtension(state->dirFiles.paths[i], ".exe;.bin;.raw;.msi;.der;.cer"))
+            else if (IsFileExtension(state->dirFiles.paths[i], ".exe;.bin;.raw;.msi;.der;.cer;.hex"))
             {
                 strcpy(dirFilesIcon[i], TextFormat("#200#%s", GetFileName(state->dirFiles.paths[i])));
             }

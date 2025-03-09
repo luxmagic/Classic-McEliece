@@ -1,13 +1,13 @@
 # Makefile
-# cmake_install.cmake
-# install_manifest.txt
-# compile_commands.json
-# CTestTestfile.cmake
-# _deps
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
 
 ### CMake Patch ###
 # External projects
-# *-prefix/
+*-prefix/
 
 ### Executable ###
 *.app
@@ -31,7 +31,6 @@
 *.raw
 *.png
 *.ico
-*.txt
 *.pdb
 /raygui/**
 /build/**
